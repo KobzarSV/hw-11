@@ -5,58 +5,92 @@ import java.util.Collections;
 import java.util.List;
 
 public class Main {
-    volatile static int n = 15;
-    volatile static int i = 1;
-    static List<String> list = Collections.synchronizedList(new ArrayList<>());
+    volatile static int numbers = 15;
+    volatile static int counter = 1;
+    static final List<String> list = Collections.synchronizedList(new ArrayList<>());
 
     public static void main(String[] args) throws InterruptedException {
 
-        Thread A = new Thread(Main::fizz);
-        A.start();
-        Thread B = new Thread(Main::buzz);
-        B.start();
-        Thread C = new Thread(Main::fizzbuzz);
-        C.start();
-        Thread D = new Thread(Main::number);
-        D.start();
+        Thread a = new Thread(Main::fizz);
+        a.start();
+        Thread b = new Thread(Main::buzz);
+        b.start();
+        Thread c = new Thread(Main::fizzbuzz);
+        c.start();
+        Thread d = new Thread(Main::number);
+        d.start();
 
         Thread.sleep(1000);
         System.out.println(list);
     }
 
     public static void fizz() {
-        while (i <= n) {
-            if (i % 3 == 0 && i % 5 != 0) {
-                list.add("fizz");
-                i++;
+        synchronized (list) {
+            while (counter <= numbers) {
+                if (counter % 3 == 0 && counter % 5 != 0) {
+                    list.add("fizz");
+                    counter++;
+                    list.notifyAll();
+                } else {
+                    try {
+                        list.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }
 
     public static void buzz() {
-        while (i <= n) {
-            if (i % 5 == 0 && i % 3 != 0) {
-                list.add("buzz");
-                i++;
+        synchronized (list) {
+            while (counter <= numbers) {
+                if (counter % 5 == 0 && counter % 3 != 0) {
+                    list.add("buzz");
+                    counter++;
+                    list.notifyAll();
+                } else {
+                    try {
+                        list.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }
 
     public static void fizzbuzz() {
-        while (i <= n) {
-            if (i % 3 == 0 && i % 5 == 0) {
-                list.add("fizzbuzz");
-                i++;
+        synchronized (list) {
+            while (counter <= numbers) {
+                if (counter % 3 == 0 && counter % 5 == 0) {
+                    list.add("fizzbuzz");
+                    counter++;
+                    list.notifyAll();
+                } else {
+                    try {
+                        list.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }
 
     public static void number() {
-        while (i <= n) {
-            if (i % 3 != 0) {
-                if (i % 5 != 0) {
-                    list.add(String.valueOf(i));
-                    i++;
+        synchronized (list) {
+            while (counter <= numbers) {
+                if (counter % 3 == 0 || counter % 5 == 0) {
+                    try {
+                        list.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    list.add(String.valueOf(counter));
+                    counter++;
+                    list.notifyAll();
                 }
             }
         }
